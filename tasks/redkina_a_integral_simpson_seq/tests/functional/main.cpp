@@ -1,3 +1,4 @@
+// redkina_a_integral_simpson_seq/tests/functional/main.cpp
 #include <gtest/gtest.h>
 
 #include <array>
@@ -55,22 +56,27 @@ InputData MakeInput(std::function<double(const std::vector<double> &)> func, std
   return InputData{.func = std::move(func), .a = std::move(a), .b = std::move(b), .n = std::move(n)};
 }
 
+// Минимальный набор тестов (3 штуки) для покрытия основных случаев:
+// 1D, 2D, 3D; полиномы; разные пределы.
 const std::array<TestType, 3> kTestCases = {
-    // 1D константа
-    std::make_tuple(1,
-                    MakeInput([](const std::vector<double> &) { return 1.0; }, std::vector<double>{0.0},
-                              std::vector<double>{1.0}, std::vector<int>{2}),
-                    1.0),
-    // 1D x^2
+    // 1D: квадратичная функция x^2 на [0,1] (точное значение 1/3)
     std::make_tuple(3,
                     MakeInput([](const std::vector<double> &x) { return x[0] * x[0]; }, std::vector<double>{0.0},
                               std::vector<double>{1.0}, std::vector<int>{2}),
                     1.0 / 3.0),
-    // 1D exp(x)
-    std::make_tuple(7,
-                    MakeInput([](const std::vector<double> &x) { return std::exp(x[0]); }, std::vector<double>{0.0},
-                              std::vector<double>{1.0}, std::vector<int>{200}),
-                    kE - 1.0)};
+
+    // 2D: произведение x*y на [0,1]^2 (точное значение 0.25)
+    std::make_tuple(9,
+                    MakeInput([](const std::vector<double> &x) { return x[0] * x[1]; }, std::vector<double>{0.0, 0.0},
+                              std::vector<double>{1.0, 1.0}, std::vector<int>{2, 2}),
+                    0.25),
+
+    // 3D: сумма квадратов x^2 + y^2 + z^2 на [-1,1]^3 (точное значение 8.0)
+    std::make_tuple(
+        19,
+        MakeInput([](const std::vector<double> &x) { return (x[0] * x[0]) + (x[1] * x[1]) + (x[2] * x[2]); },
+                  std::vector<double>{-1.0, -1.0, -1.0}, std::vector<double>{1.0, 1.0, 1.0}, std::vector<int>{2, 2, 2}),
+        8.0)};
 
 const auto kTestTasksListSeq =
     ppc::util::AddFuncTask<RedkinaAIntegralSimpsonSEQ, InType>(kTestCases, PPC_SETTINGS_redkina_a_integral_simpson_seq);
