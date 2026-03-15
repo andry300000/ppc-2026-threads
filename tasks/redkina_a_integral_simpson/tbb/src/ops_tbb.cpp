@@ -11,6 +11,40 @@
 
 namespace redkina_a_integral_simpson {
 
+namespace {
+// Вспомогательная функция для вычисления вклада одного узла сетки
+double ComputeNodeContribution(size_t linear_idx, const std::vector<double> &a, const std::vector<double> &h,
+                               const std::vector<int> &n, const std::vector<size_t> &strides,
+                               const std::function<double(const std::vector<double> &)> &func) {
+  size_t dim = a.size();
+  std::vector<double> point(dim);
+  size_t remainder = linear_idx;
+  std::vector<int> indices(dim);
+
+  for (size_t i = 0; i < dim; ++i) {
+    indices[i] = static_cast<int>(remainder / strides[i]);
+    remainder %= strides[i];
+  }
+
+  double w_prod = 1.0;
+  for (size_t i = 0; i < dim; ++i) {
+    int idx = indices[i];
+    point[i] = a[i] + (static_cast<double>(idx) * h[i]);  // скобки для ясности приоритета
+
+    int w = 0;
+    if (idx == 0 || idx == n[i]) {
+      w = 1;
+    } else if (idx % 2 == 1) {
+      w = 4;
+    } else {
+      w = 2;
+    }
+    w_prod *= static_cast<double>(w);
+  }
+  return w_prod * func(point);
+}
+}  // namespace
+
 RedkinaAIntegralSimpsonTBB::RedkinaAIntegralSimpsonTBB(const InType &in) {
   SetTypeOfTask(GetStaticTypeOfTask());
   GetInput() = in;
@@ -47,7 +81,14 @@ bool RedkinaAIntegralSimpsonTBB::PreProcessingImpl() {
 }
 
 bool RedkinaAIntegralSimpsonTBB::RunImpl() {
+  // Дополнительные проверки для анализатора
+  if (!func_) {
+    return false;
+  }
   size_t dim = a_.size();
+  if (dim == 0) {
+    return false;
+  }
 
   // Шаги интегрирования по каждому измерению
   std::vector<double> h(dim);
@@ -80,33 +121,8 @@ bool RedkinaAIntegralSimpsonTBB::RunImpl() {
   // Параллельное суммирование вкладов с использованием TBB
   double sum = tbb::parallel_reduce(tbb::blocked_range<size_t>(0, total_points), 0.0,
                                     [&](const tbb::blocked_range<size_t> &r, double local_sum) {
-    std::vector<double> point(dim);
     for (size_t linear_idx = r.begin(); linear_idx != r.end(); ++linear_idx) {
-      // Преобразование линейного индекса в многомерные индексы
-      size_t remainder = linear_idx;
-      std::vector<int> indices(dim);
-      for (size_t i = 0; i < dim; ++i) {
-        indices[i] = static_cast<int>(remainder / strides[i]);
-        remainder %= strides[i];
-      }
-
-      // Вычисление точки и весового коэффициента Симпсона
-      double w_prod = 1.0;
-      for (size_t i = 0; i < dim; ++i) {
-        int idx = indices[i];
-        point[i] = a_[i] + static_cast<double>(idx) * h[i];
-
-        int w = 0;
-        if (idx == 0 || idx == n_[i]) {
-          w = 1;
-        } else if (idx % 2 == 1) {
-          w = 4;
-        } else {
-          w = 2;
-        }
-        w_prod *= static_cast<double>(w);
-      }
-      local_sum += w_prod * func_(point);
+      local_sum += ComputeNodeContribution(linear_idx, a_, h, n_, strides, func_);
     }
     return local_sum;
   }, [](double x, double y) -> double { return x + y; });
