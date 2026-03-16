@@ -3,8 +3,8 @@
 #include <cmath>
 
 #include "afanasyev_a_integ_rect_method/common/include/common.hpp"
-#include "afanasyev_a_integ_rect_method/seq/include/ops_seq.hpp"
 #include "afanasyev_a_integ_rect_method/omp/include/ops_omp.hpp"
+#include "afanasyev_a_integ_rect_method/seq/include/ops_seq.hpp"
 #include "util/include/perf_test_util.hpp"
 
 namespace afanasyev_a_integ_rect_method {

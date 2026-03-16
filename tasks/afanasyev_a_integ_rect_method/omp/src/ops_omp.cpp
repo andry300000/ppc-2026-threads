@@ -44,7 +44,7 @@ bool AfanasyevAIntegRectMethodOMP::RunImpl() {
 
   double sum = 0.0;
 
-#pragma omp parallel for collapse(3) reduction(+:sum)
+#pragma omp parallel for collapse(3) reduction(+:sum) default(none) shared(n, h, k_dim)
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < n; ++j) {
       for (int k = 0; k < n; ++k) {
