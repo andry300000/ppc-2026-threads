@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <utility>
 #include <vector>
 
 #include "lazareva_a_matrix_mult_strassen/common/include/common.hpp"
@@ -155,7 +156,7 @@ std::vector<double> LazarevaATestTaskOMP::NaiveMult(const std::vector<double> &a
 
 std::vector<double> LazarevaATestTaskOMP::Strassen(const std::vector<double> &root_a, const std::vector<double> &root_b,
                                                    int root_n) {
-  if (root_n <= 128) {
+  if (root_n <= 64) {
     return NaiveMult(root_a, root_b, root_n);
   }
 
