@@ -43,13 +43,13 @@ bool KrykovESobelOpSEQ::RunImpl() {
 
   const std::array<std::array<int, 3>, 3> gy_kernel = {{{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}}};
 
-  auto& output = GetOutput();
+  auto &output = GetOutput();
 
-  const auto& gray = grayscale_;
+  const auto &gray = grayscale_;
   const int h = height_;
   const int w = width_;
 
-  #pragma omp parallel for default(none) shared(output, gray, gx_kernel, gy_kernel) firstprivate(h, w) schedule(static)
+#pragma omp parallel for default(none) shared(output, gray, gx_kernel, gy_kernel) firstprivate(h, w) schedule(static)
 
   for (int row = 1; row < h - 1; ++row) {
     for (int col = 1; col < w - 1; ++col) {

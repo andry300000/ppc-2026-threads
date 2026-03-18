@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "krykov_e_sobel_op/common/include/common.hpp"
+#include "krykov_e_sobel_op/omp/include/ops_omp.hpp"
 #include "krykov_e_sobel_op/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
