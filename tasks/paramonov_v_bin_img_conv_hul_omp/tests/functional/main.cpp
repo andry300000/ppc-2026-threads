@@ -14,6 +14,12 @@
 
 namespace paramonov_v_bin_img_conv_hul_omp {
 
+// Импортируем типы из оригинального namespace
+using paramonov_v_bin_img_conv_hul::GrayImage;
+using paramonov_v_bin_img_conv_hul::InputType;
+using paramonov_v_bin_img_conv_hul::OutputType;
+using paramonov_v_bin_img_conv_hul::PixelPoint;
+
 using TestCase = std::tuple<GrayImage, std::vector<std::vector<PixelPoint>>, std::string>;
 
 namespace {

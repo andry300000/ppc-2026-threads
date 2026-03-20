@@ -12,6 +12,12 @@
 
 namespace paramonov_v_bin_img_conv_hul_omp {
 
+// Импортируем типы из оригинального namespace
+using paramonov_v_bin_img_conv_hul::GrayImage;
+using paramonov_v_bin_img_conv_hul::InputType;
+using paramonov_v_bin_img_conv_hul::OutputType;
+using paramonov_v_bin_img_conv_hul::PixelPoint;
+
 class ConvexHullPerformanceTest : public ppc::util::BaseRunPerfTests<InputType, OutputType> {
   static constexpr int kImageSize = 600;
 
