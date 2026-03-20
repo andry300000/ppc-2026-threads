@@ -60,10 +60,11 @@ bool ConvexHullOMP::PostProcessingImpl() {
 
 void ConvexHullOMP::BinarizeImage(uint8_t threshold) {
   const size_t size = working_image_.pixels.size();
+  auto &pixels = working_image_.pixels;
 
-#pragma omp parallel for default(none) shared(working_image_, threshold, size)
+#pragma omp parallel for default(none) shared(pixels, threshold, size)
   for (size_t i = 0; i < size; ++i) {
-    working_image_.pixels[i] = working_image_.pixels[i] > threshold ? uint8_t{255} : uint8_t{0};
+    pixels[i] = pixels[i] > threshold ? uint8_t{255} : uint8_t{0};
   }
 }
 
@@ -107,11 +108,14 @@ void ConvexHullOMP::ExtractConnectedComponents() {
   std::vector<std::vector<PixelPoint>> components;
   std::vector<std::pair<int, int>> start_points;
 
-#pragma omp parallel for default(none) shared(rows, cols, working_image_, visited, start_points)
+  // Сохраняем ссылки на данные для использования в OpenMP
+  auto &pixels = working_image_.pixels;
+
+#pragma omp parallel for default(none) shared(rows, cols, pixels, visited, start_points)
   for (int row = 0; row < rows; ++row) {
     for (int col = 0; col < cols; ++col) {
-      size_t idx = PixelIndex(row, col, cols);
-      if (working_image_.pixels[idx] == 255 && !visited[idx]) {
+      size_t idx = static_cast<size_t>(row) * static_cast<size_t>(cols) + static_cast<size_t>(col);
+      if (pixels[idx] == 255 && !visited[idx]) {
 #pragma omp critical
         {
           if (!visited[idx]) {
@@ -123,8 +127,7 @@ void ConvexHullOMP::ExtractConnectedComponents() {
     }
   }
 
-#pragma omp parallel for default(none) \
-    shared(start_points, total_pixels, rows, cols, working_image_, components, kNeighbors)
+#pragma omp parallel for default(none) shared(start_points, total_pixels, rows, cols, pixels, components, kNeighbors)
   for (size_t i = 0; i < start_points.size(); ++i) {
     const auto &start_point = start_points[i];
     int start_row = start_point.first;
@@ -135,7 +138,7 @@ void ConvexHullOMP::ExtractConnectedComponents() {
 
     std::stack<PixelPoint> pixel_stack;
     pixel_stack.emplace(start_row, start_col);
-    local_visited[PixelIndex(start_row, start_col, cols)] = true;
+    local_visited[static_cast<size_t>(start_row) * static_cast<size_t>(cols) + static_cast<size_t>(start_col)] = true;
 
     while (!pixel_stack.empty()) {
       PixelPoint current = pixel_stack.top();
@@ -147,8 +150,8 @@ void ConvexHullOMP::ExtractConnectedComponents() {
         int next_col = current.col + dc;
 
         if (next_row >= 0 && next_row < rows && next_col >= 0 && next_col < cols) {
-          size_t idx = PixelIndex(next_row, next_col, cols);
-          if (!local_visited[idx] && working_image_.pixels[idx] == 255) {
+          size_t idx = static_cast<size_t>(next_row) * static_cast<size_t>(cols) + static_cast<size_t>(next_col);
+          if (!local_visited[idx] && pixels[idx] == 255) {
             local_visited[idx] = true;
             pixel_stack.emplace(next_row, next_col);
           }
