@@ -21,7 +21,6 @@ class TimurACannonMatrixMultiplicationTBB : public BaseTask {
   explicit TimurACannonMatrixMultiplicationTBB(const InType &in);
   ~TimurACannonMatrixMultiplicationTBB() override = default;
 
-  
  private:
   bool ValidationImpl() override;
   bool PreProcessingImpl() override;
