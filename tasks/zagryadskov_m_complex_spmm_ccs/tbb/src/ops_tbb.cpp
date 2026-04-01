@@ -4,6 +4,7 @@
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/tbb.h>
 
+#include <complex>
 #include <util/include/util.hpp>
 #include <vector>
 
@@ -18,7 +19,7 @@ ZagryadskovMComplexSpMMCCSTBB::ZagryadskovMComplexSpMMCCSTBB(const InType &in) {
   GetOutput() = CCS();
 }
 
-void ZagryadskovMComplexSpMMCCSTBB::SpMM_symbolic(const CCS &a, const CCS &b, std::vector<int> &col_ptr) {
+void ZagryadskovMComplexSpMMCCSTBB::SpMMSymbolic(const CCS &a, const CCS &b, std::vector<int> &col_ptr) {
   const int m = a.m;
   const int n = b.n;
 
@@ -26,7 +27,7 @@ void ZagryadskovMComplexSpMMCCSTBB::SpMM_symbolic(const CCS &a, const CCS &b, st
 
   tbb::enumerable_thread_specific<std::vector<int>> tls_marker([&]() { return std::vector<int>(m, -1); });
 
-  tbb::parallel_for(tbb::blocked_range<int>(0, n), [&](const tbb::blocked_range<int> &r) {
+  tbb::parallel_for(tbb::blocked_range<int>(0, n, 64), [&](const tbb::blocked_range<int> &r) {
     auto &marker = tls_marker.local();
 
     for (int j = r.begin(); j < r.end(); ++j) {
@@ -55,8 +56,42 @@ void ZagryadskovMComplexSpMMCCSTBB::SpMM_symbolic(const CCS &a, const CCS &b, st
   }
 }
 
-void ZagryadskovMComplexSpMMCCSTBB::SpMM_numeric(const CCS &a, const CCS &b, CCS &c, const std::complex<double> &zero,
-                                                 double eps) {
+void ZagryadskovMComplexSpMMCCSTBB::SpMMKernel(const CCS &a, const CCS &b, CCS &c, const std::complex<double> &zero,
+                                               double eps, std::vector<int> &rows,
+                                               std::vector<std::complex<double>> &acc, std::vector<int> &marker,
+                                               int j) {
+  rows.clear();
+
+  int write_ptr = c.col_ptr[j];
+
+  for (int k = b.col_ptr[j]; k < b.col_ptr[j + 1]; ++k) {
+    std::complex<double> tmpval = b.values[k];
+    int b_row = b.row_ind[k];
+
+    for (int zp = a.col_ptr[b_row]; zp < a.col_ptr[b_row + 1]; ++zp) {
+      int a_row = a.row_ind[zp];
+
+      acc[a_row] += tmpval * a.values[zp];
+
+      if (marker[a_row] != j) {
+        marker[a_row] = j;
+        rows.push_back(a_row);
+      }
+    }
+  }
+
+  for (int r_idx : rows) {
+    if (std::norm(acc[r_idx]) > eps * eps) {
+      c.row_ind[write_ptr] = r_idx;
+      c.values[write_ptr] = acc[r_idx];
+      ++write_ptr;
+    }
+    acc[r_idx] = zero;
+  }
+}
+
+void ZagryadskovMComplexSpMMCCSTBB::SpMMNumeric(const CCS &a, const CCS &b, CCS &c, const std::complex<double> &zero,
+                                                double eps) {
   const int m = a.m;
   const int n = b.n;
 
@@ -65,41 +100,14 @@ void ZagryadskovMComplexSpMMCCSTBB::SpMM_numeric(const CCS &a, const CCS &b, CCS
   tbb::enumerable_thread_specific<std::vector<std::complex<double>>> tls_acc(
       [&]() { return std::vector<std::complex<double>>(m, zero); });
 
-  tbb::parallel_for(tbb::blocked_range<int>(0, n), [&](const tbb::blocked_range<int> &r) {
+  tbb::parallel_for(tbb::blocked_range<int>(0, n, 64), [&](const tbb::blocked_range<int> &r) {
     auto &marker = tls_marker.local();
     auto &acc = tls_acc.local();
 
     std::vector<int> rows;
 
     for (int j = r.begin(); j < r.end(); ++j) {
-      rows.clear();
-
-      int write_ptr = c.col_ptr[j];
-
-      for (int k = b.col_ptr[j]; k < b.col_ptr[j + 1]; ++k) {
-        std::complex<double> tmpval = b.values[k];
-        int b_row = b.row_ind[k];
-
-        for (int zp = a.col_ptr[b_row]; zp < a.col_ptr[b_row + 1]; ++zp) {
-          int a_row = a.row_ind[zp];
-
-          acc[a_row] += tmpval * a.values[zp];
-
-          if (marker[a_row] != j) {
-            marker[a_row] = j;
-            rows.push_back(a_row);
-          }
-        }
-      }
-
-      for (int r_idx : rows) {
-        if (std::abs(acc[r_idx]) > eps) {
-          c.row_ind[write_ptr] = r_idx;
-          c.values[write_ptr] = acc[r_idx];
-          ++write_ptr;
-        }
-        acc[r_idx] = zero;
-      }
+      SpMMKernel(a, b, c, zero, eps, rows, acc, marker, j);
     }
   });
 }
@@ -111,13 +119,13 @@ void ZagryadskovMComplexSpMMCCSTBB::SpMM(const CCS &a, const CCS &b, CCS &c) {
   std::complex<double> zero(0.0, 0.0);
   const double eps = 1e-14;
 
-  SpMM_symbolic(a, b, c.col_ptr);
+  SpMMSymbolic(a, b, c.col_ptr);
 
   int nnz = c.col_ptr[b.n];
   c.row_ind.resize(nnz);
   c.values.resize(nnz);
 
-  SpMM_numeric(a, b, c, zero, eps);
+  SpMMNumeric(a, b, c, zero, eps);
 }
 
 bool ZagryadskovMComplexSpMMCCSTBB::ValidationImpl() {
