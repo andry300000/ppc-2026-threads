@@ -50,12 +50,12 @@ int ApplyKernel(const std::vector<uint8_t> &img, int row, int col, int channel, 
 
 void ProcessFullBlock(const std::vector<uint8_t> &initial_picture, std::vector<uint8_t> &result_picture, int width,
                       int height, int start_row, int start_col) {
-  static constexpr std::array<std::array<int, 3>, 3> kernel = {{{1, 2, 1}, {2, 4, 2}, {1, 2, 1}}};
+  static constexpr std::array<std::array<int, 3>, 3> kKernel = {{{1, 2, 1}, {2, 4, 2}, {1, 2, 1}}};
 
   for (int row = start_row; row < start_row + kBlockSize; ++row) {
     for (int col = start_col; col < start_col + kBlockSize; ++col) {
       for (int channel = 0; channel < 3; ++channel) {
-        int sum = ApplyKernel(initial_picture, row, col, channel, width, height, kernel);
+        int sum = ApplyKernel(initial_picture, row, col, channel, width, height, kKernel);
         int result_value = (sum + 8) / 16;
         result_value = std::clamp(result_value, 0, 255);
         auto idx = ((static_cast<size_t>(row) * width + col) * 3) + channel;
@@ -67,7 +67,7 @@ void ProcessFullBlock(const std::vector<uint8_t> &initial_picture, std::vector<u
 
 void ProcessPartBlock(const std::vector<uint8_t> &initial_picture, std::vector<uint8_t> &result_picture, int width,
                       int height, int start_row, int start_col) {
-  static constexpr std::array<std::array<int, 3>, 3> kernel = {{{1, 2, 1}, {2, 4, 2}, {1, 2, 1}}};
+  static constexpr std::array<std::array<int, 3>, 3> kKernel = {{{1, 2, 1}, {2, 4, 2}, {1, 2, 1}}};
 
   const int end_row = std::min(height, start_row + kBlockSize);
   const int end_col = std::min(width, start_col + kBlockSize);
@@ -75,7 +75,7 @@ void ProcessPartBlock(const std::vector<uint8_t> &initial_picture, std::vector<u
   for (int row = start_row; row < end_row; ++row) {
     for (int col = start_col; col < end_col; ++col) {
       for (int channel = 0; channel < 3; ++channel) {
-        int sum = ApplyKernel(initial_picture, row, col, channel, width, height, kernel);
+        int sum = ApplyKernel(initial_picture, row, col, channel, width, height, kKernel);
         int result_value = (sum + 8) / 16;
         result_value = std::clamp(result_value, 0, 255);
         auto idx = ((static_cast<size_t>(row) * width + col) * 3) + channel;
