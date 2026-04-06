@@ -12,8 +12,8 @@
 #include "samoylenko_i_integral_trapezoid/common/include/common.hpp"
 #include "samoylenko_i_integral_trapezoid/omp/include/ops_omp.hpp"
 #include "samoylenko_i_integral_trapezoid/seq/include/ops_seq.hpp"
-#include "samoylenko_i_integral_trapezoid/tbb/include/ops_tbb.hpp"
 #include "samoylenko_i_integral_trapezoid/stl/include/ops_stl.hpp"
+#include "samoylenko_i_integral_trapezoid/tbb/include/ops_tbb.hpp"
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
 
