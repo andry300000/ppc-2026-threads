@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <vector>
-
 #include "tsarkov_k_jarvis_convex_hull/common/include/common.hpp"
 #include "tsarkov_k_jarvis_convex_hull/seq/include/ops_seq.hpp"
 #include "util/include/perf_test_util.hpp"

@@ -4,11 +4,11 @@
 #include <cstddef>
 #include <string>
 #include <tuple>
-#include <vector>
 
 #include "tsarkov_k_jarvis_convex_hull/common/include/common.hpp"
 #include "tsarkov_k_jarvis_convex_hull/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
+#include "util/include/util.hpp"
 
 namespace tsarkov_k_jarvis_convex_hull {
 
@@ -24,26 +24,30 @@ class TsarkovKRunFuncTestsSEQ : public ppc::util::BaseRunFuncTests<InType, OutTy
         std::get<0>(std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam()));
 
     if (test_case_id == 0) {
-      input_data_ = {{0, 0}};
-      expected_output_ = {{0, 0}};
+      input_data_ = {Point{.x = 0, .y = 0}};
+      expected_output_ = {Point{.x = 0, .y = 0}};
     } else if (test_case_id == 1) {
-      input_data_ = {{0, 0}, {2, 0}};
-      expected_output_ = {{0, 0}, {2, 0}};
+      input_data_ = {Point{.x = 0, .y = 0}, Point{.x = 2, .y = 0}};
+      expected_output_ = {Point{.x = 0, .y = 0}, Point{.x = 2, .y = 0}};
     } else if (test_case_id == 2) {
-      input_data_ = {{0, 0}, {2, 0}, {1, 2}};
-      expected_output_ = {{0, 0}, {2, 0}, {1, 2}};
+      input_data_ = {Point{.x = 0, .y = 0}, Point{.x = 2, .y = 0}, Point{.x = 1, .y = 2}};
+      expected_output_ = {Point{.x = 0, .y = 0}, Point{.x = 2, .y = 0}, Point{.x = 1, .y = 2}};
     } else if (test_case_id == 3) {
-      input_data_ = {{0, 0}, {2, 0}, {2, 2}, {0, 2}, {1, 1}};
-      expected_output_ = {{0, 0}, {2, 0}, {2, 2}, {0, 2}};
+      input_data_ = {Point{.x = 0, .y = 0}, Point{.x = 2, .y = 0}, Point{.x = 2, .y = 2}, Point{.x = 0, .y = 2},
+                     Point{.x = 1, .y = 1}};
+      expected_output_ = {Point{.x = 0, .y = 0}, Point{.x = 2, .y = 0}, Point{.x = 2, .y = 2}, Point{.x = 0, .y = 2}};
     } else if (test_case_id == 4) {
-      input_data_ = {{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}};
-      expected_output_ = {{0, 0}, {4, 4}};
+      input_data_ = {Point{.x = 0, .y = 0}, Point{.x = 1, .y = 1}, Point{.x = 2, .y = 2}, Point{.x = 3, .y = 3},
+                     Point{.x = 4, .y = 4}};
+      expected_output_ = {Point{.x = 0, .y = 0}, Point{.x = 4, .y = 4}};
     } else if (test_case_id == 5) {
-      input_data_ = {{0, 0}, {2, 0}, {2, 2}, {0, 2}, {0, 0}, {2, 0}, {1, 1}, {1, 1}};
-      expected_output_ = {{0, 0}, {2, 0}, {2, 2}, {0, 2}};
+      input_data_ = {Point{.x = 0, .y = 0}, Point{.x = 2, .y = 0}, Point{.x = 2, .y = 2}, Point{.x = 0, .y = 2},
+                     Point{.x = 0, .y = 0}, Point{.x = 2, .y = 0}, Point{.x = 1, .y = 1}, Point{.x = 1, .y = 1}};
+      expected_output_ = {Point{.x = 0, .y = 0}, Point{.x = 2, .y = 0}, Point{.x = 2, .y = 2}, Point{.x = 0, .y = 2}};
     } else if (test_case_id == 6) {
-      input_data_ = {{-2, 0}, {-1, -1}, {0, -2}, {2, 0}, {0, 2}, {-1, 1}, {0, 0}};
-      expected_output_ = {{-2, 0}, {0, -2}, {2, 0}, {0, 2}};
+      input_data_ = {Point{.x = -2, .y = 0}, Point{.x = -1, .y = -1}, Point{.x = 0, .y = -2}, Point{.x = 2, .y = 0},
+                     Point{.x = 0, .y = 2},  Point{.x = -1, .y = 1},  Point{.x = 0, .y = 0}};
+      expected_output_ = {Point{.x = -2, .y = 0}, Point{.x = 0, .y = -2}, Point{.x = 2, .y = 0}, Point{.x = 0, .y = 2}};
     }
   }
 
@@ -56,7 +60,7 @@ class TsarkovKRunFuncTestsSEQ : public ppc::util::BaseRunFuncTests<InType, OutTy
   }
 
  private:
-  InType input_data_{};
+  InType input_data_;
   OutType expected_output_;
 };
 
